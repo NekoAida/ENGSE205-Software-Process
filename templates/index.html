@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองห้องประชุม (Sprint 1-2)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .status-available {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-busy {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="container py-5">
+    <h1 class="mb-4">📅 ระบบจองห้องประชุม</h1>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ชื่อห้อง</th>
+                <th>ความจุ</th>
+                <th>สถานะ</th>
+                <th>ผู้จอง</th>
+                <th>จัดการ (Sprint 2)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for room in rooms %}
+            <tr>
+                <td>{{ room.name }}</td>
+                <td>{{ room.capacity }} คน</td>
+
+                <td>
+                    {% if room.is_available %}
+                    <span class="status-available">ว่าง</span>
+                    {% else %}
+                    <span class="status-busy">ไม่ว่าง</span>
+                    {% endif %}
+                </td>
+                <td>{{ room.booked_by }}</td>
+
+                <td>
+                    {% if room.is_available %}
+                    <form action="/book/{{ room.id }}" method="POST" class="d-flex gap-2">
+                        <input type="text" name="booker_name" class="form-control form-control-sm"
+                            placeholder="ใส่ชื่อผู้จอง" required>
+                        <button type="submit" class="btn btn-primary btn-sm">จอง</button>
+                    </form>
+                    {% else %}
+                    <form action="/cancel/{{ room.id }}" method="POST">
+                        <button type="submit" class="btn btn-danger btn-sm">ยกเลิก</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>
