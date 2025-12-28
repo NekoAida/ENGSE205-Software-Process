@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>การจองห้องประชุม - ระบบจองห้องประชุม</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navigation Menu -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                🏢 ระบบจองห้องประชุม
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            🏠 หน้าแรก
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/booking">
+                            📅 การจอง
+                        </a>
+                    </li>
+                    <!-- เว้นที่สำหรับ Menu อื่นๆ ในอนาคต -->
+                    <!-- 
+                    <li class="nav-item">
+                        <a class="nav-link" href="/reports">
+                            📊 รายงาน
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings">
+                            ⚙️ ตั้งค่า
+                        </a>
+                    </li>
+                    -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container content-area">
+        <h1 class="mb-4">📅 การจองห้องประชุม</h1>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            {% for room in rooms %}
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">{{ room.name }}</h5>
+                        <small>ความจุ: {{ room.capacity }} คน</small>
+                    </div>
+                    <div class="card-body">
+                        <h6>📋 รายการจอง:</h6>
+                        {% if room.bookings %}
+                        <div class="booking-list">
+                            {% for booking in room.bookings %}
+                            <div class="booking-item">
+                                <div class="booking-details">
+                                    <strong>👤 {{ booking.booker_name }}</strong><br>
+                                    <span class="text-muted">
+                                        📅 {{ booking.date }} | ⏰ {{ booking.start_time }} - {{ booking.end_time }}
+                                    </span>
+                                </div>
+                                <form action="/cancel/{{ booking.id }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-danger btn-sm">❌ ยกเลิก</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted">ยังไม่มีการจอง</p>
+                        {% endif %}
+
+                        <button type="button" class="btn btn-primary w-100 mt-3" data-bs-toggle="modal"
+                            data-bs-target="#bookingModal{{ room.id }}">
+                            📝 จองห้องนี้
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal สำหรับจองห้อง -->
+            <div class="modal fade" id="bookingModal{{ room.id }}" tabindex="-1"
+                aria-labelledby="bookingModalLabel{{ room.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="bookingModalLabel{{ room.id }}">
+                                🏢 จองห้องประชุม: {{ room.name }}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="booking-info">
+                                <h6>📍 ห้องที่เลือก</h6>
+                                <p>{{ room.name }}</p>
+                            </div>
+                            <div class="booking-info">
+                                <h6>👥 ความจุ</h6>
+                                <p>{{ room.capacity }} คน</p>
+                            </div>
+
+                            <form action="/book/{{ room.id }}" method="POST" id="bookingForm{{ room.id }}">
+                                <div class="mb-3">
+                                    <label for="bookerName{{ room.id }}" class="form-label">
+                                        <strong>👤 ชื่อผู้จอง</strong>
+                                    </label>
+                                    <input type="text" class="form-control" id="bookerName{{ room.id }}"
+                                        name="booker_name" placeholder="กรอกชื่อผู้จอง" required autocomplete="off">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="bookingDate{{ room.id }}" class="form-label">
+                                        <strong>📅 วันที่จอง</strong>
+                                    </label>
+                                    <input type="date" class="form-control" id="bookingDate{{ room.id }}" name="date"
+                                        required min="{{ today }}">
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="startTime{{ room.id }}" class="form-label">
+                                            <strong>⏰ เวลาเริ่ม</strong>
+                                        </label>
+                                        <input type="time" class="form-control" id="startTime{{ room.id }}"
+                                            name="start_time" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="endTime{{ room.id }}" class="form-label">
+                                            <strong>⏰ เวลาสิ้นสุด</strong>
+                                        </label>
+                                        <input type="time" class="form-control" id="endTime{{ room.id }}"
+                                            name="end_time" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-text mt-2">
+                                    กรุณาเลือกวันที่และเวลาที่ต้องการจอง
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                ยกเลิก
+                            </button>
+                            <button type="submit" form="bookingForm{{ room.id }}" class="btn btn-primary">
+                                ✅ ยืนยันการจอง
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% endfor %}
+        </div>
+
+    </div> <!-- End of container content-area -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
