@@ -29,7 +29,7 @@
                         <a class="nav-link" href="/booking">📅 การจอง</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/history">🕘 ประวัติการจอง</a>
+                        <a class="nav-link active" href="/history">📜 ประวัติการจอง</a>
                     </li>
                 </ul>
             </div>
@@ -37,7 +37,7 @@
     </nav>
 
     <div class="container content-area mt-4">
-        <h1 class="mb-4">🕘 ประวัติการจองทั้งหมด</h1>
+        <h1 class="mb-4">📜 ประวัติการจองและยกเลิก</h1>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -50,23 +50,55 @@
         {% endif %}
         {% endwith %}
 
-        {% if bookings %}
-        <div class="list-group">
-            {% for b in bookings %}
-            <div class="list-group-item d-flex justify-content-between align-items-start">
-                <div class="ms-2 me-auto">
-                    <div class="fw-bold">{{ b.room_name }} — {{ b.booker_name }}</div>
-                    <div class="text-muted">📅 {{ b.date }} | ⏰ {{ b.start_time }} - {{ b.end_time }}</div>
-                </div>
-                <form action="/cancel/{{ b.id }}" method="POST" class="ms-3">
-                    <button type="submit" class="btn btn-outline-danger btn-sm">❌ ยกเลิก</button>
-                </form>
-            </div>
-            {% endfor %}
+        {% if history %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>เวลาทำรายการ</th>
+                        <th>การดำเนินการ</th>
+                        <th>ห้อง</th>
+                        <th>ผู้จอง</th>
+                        <th>วันที่</th>
+                        <th>เวลา</th>
+                        <th>หมายเหตุ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in history %}
+                    <tr>
+                        <td>
+                            <small>{{ record.action_time[:19] }}</small>
+                        </td>
+                        <td>
+                            {% if record.action == 'created' %}
+                            <span class="badge bg-success">✓ จองสำเร็จ</span>
+                            {% elif record.action == 'cancelled' %}
+                            <span class="badge bg-danger">✗ ยกเลิก</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ record.action }}</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ record.room_name }}</strong></td>
+                        <td>{{ record.booker_name }}</td>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.start_time }} - {{ record.end_time }}</td>
+                        <td><small class="text-muted">{{ record.notes or '-' }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         {% else %}
-        <p class="text-muted">ยังไม่มีการจองในระบบ</p>
+        <div class="alert alert-info">
+            <p class="mb-0">ยังไม่มีประวัติการจองในระบบ</p>
+        </div>
         {% endif %}
+
+        <div class="mt-4">
+            <a href="/booking" class="btn btn-primary">📅 ไปหน้าการจอง</a>
+            <a href="/" class="btn btn-secondary">🏠 กลับหน้าแรก</a>
+        </div>
 
     </div>
 
