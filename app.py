@@ -52,13 +52,37 @@ def get_room_status(room_id):
 
 def is_time_slot_available(room_id, date, start_time, end_time):
     """ตรวจสอบว่าช่วงเวลาว่างหรือไม่"""
+    # ตรวจสอบว่า start_time ต้องน้อยกว่า end_time
+    if start_time >= end_time:
+        return False
+    
     room_bookings = get_room_status(room_id)
     
     for booking in room_bookings:
         if booking['date'] == date:
             # ตรวจสอบว่าเวลาทับซ้อนกันหรือไม่
-            if (start_time < booking['end_time'] and end_time > booking['start_time']):
-                return False
+            # เงื่อนไข: มีการทับซ้อนก็ต่อเมื่อ
+            # - เวลาเริ่มต้นใหม่ < เวลาสิ้นสุดเดิม AND เวลาสิ้นสุดใหม่ > เวลาเริ่มต้นเดิม
+            booking_start = booking['start_time']
+            booking_end = booking['end_time']
+            
+            # แปลงเป็น datetime object เพื่อเปรียบเทียบให้แม่นยำ
+            try:
+                from datetime import datetime as dt
+                # สร้าง datetime object จากวันที่และเวลา
+                new_start = dt.strptime(f"{date} {start_time}", "%Y-%m-%d %H:%M")
+                new_end = dt.strptime(f"{date} {end_time}", "%Y-%m-%d %H:%M")
+                existing_start = dt.strptime(f"{booking['date']} {booking_start}", "%Y-%m-%d %H:%M")
+                existing_end = dt.strptime(f"{booking['date']} {booking_end}", "%Y-%m-%d %H:%M")
+                
+                # ตรวจสอบการทับซ้อน
+                if (new_start < existing_end and new_end > existing_start):
+                    return False
+            except ValueError:
+                # ถ้าแปลงไม่ได้ ใช้การเปรียบเทียบแบบง่าย (fallback)
+                if (start_time < booking_end and end_time > booking_start):
+                    return False
+    
     return True
 
 
@@ -103,6 +127,16 @@ def book_room(room_id):
     # หาชื่อห้อง
     room_name = next((r['name'] for r in rooms if r['id'] == room_id), "ห้องที่เลือก")
     
+    # ตรวจสอบข้อมูลที่จำเป็น
+    if not all([booker_name, date, start_time, end_time]):
+        flash(f'❌ กรุณากรอกข้อมูลให้ครบถ้วน!', 'danger')
+        return redirect(url_for('booking'))
+    
+    # ตรวจสอบว่าเวลาเริ่มต้นน้อยกว่าเวลาสิ้นสุด
+    if start_time >= end_time:
+        flash(f'❌ เวลาเริ่มต้นต้องน้อยกว่าเวลาสิ้นสุด!', 'danger')
+        return redirect(url_for('booking'))
+    
     # ตรวจสอบว่าช่วงเวลาว่างหรือไม่
     if is_time_slot_available(room_id, date, start_time, end_time):
         new_booking = {
@@ -119,7 +153,7 @@ def book_room(room_id):
         next_booking_id += 1
         flash(f'✅ จองห้อง {room_name} สำเร็จ! วันที่ {date} เวลา {start_time} - {end_time}', 'success')
     else:
-        flash(f'❌ ไม่สามารถจองได้! ห้อง {room_name} ไม่ว่างในวันที่ {date} เวลา {start_time} - {end_time}', 'danger')
+        flash(f'❌ ไม่สามารถจองได้! ห้อง {room_name} มีการจองในช่วงเวลาที่ทับซ้อนกัน (วันที่ {date} เวลา {start_time} - {end_time})', 'danger')
     
     return redirect(url_for('booking'))
 
