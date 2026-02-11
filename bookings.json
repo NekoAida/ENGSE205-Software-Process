@@ -6,21 +6,5 @@
     "date": "2025-12-28",
     "start_time": "09:00",
     "end_time": "12:00"
-  },
-  {
-    "id": 3,
-    "room_id": 1,
-    "booker_name": "1123",
-    "date": "2026-03-06",
-    "start_time": "12:31",
-    "end_time": "01:12"
-  },
-  {
-    "id": 4,
-    "room_id": 1,
-    "booker_name": "11111",
-    "date": "2026-03-06",
-    "start_time": "12:31",
-    "end_time": "01:12"
   }
 ]
