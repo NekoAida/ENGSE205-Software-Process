@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
+import json
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here-change-in-production'  # จำเป็นสำหรับ flash messages
@@ -12,12 +14,34 @@ rooms = [
     {"id": 3, "name": "Town Hall", "capacity": 50},
 ]
 
-# เก็บรายการการจองทั้งหมด
-# โครงสร้าง: {"id": 1, "room_id": 1, "booker_name": "...", "date": "2025-12-28", "start_time": "09:00", "end_time": "10:00"}
-bookings = [
+BOOKINGS_FILE = 'bookings.json'
+
+# ค่าเริ่มต้นในกรณีที่ยังไม่มีไฟล์
+DEFAULT_BOOKINGS = [
     {"id": 1, "room_id": 3, "booker_name": "HR Team", "date": "2025-12-28", "start_time": "09:00", "end_time": "12:00"},
 ]
-next_booking_id = 2
+
+
+def load_bookings():
+    if os.path.exists(BOOKINGS_FILE):
+        try:
+            with open(BOOKINGS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return DEFAULT_BOOKINGS.copy()
+    return DEFAULT_BOOKINGS.copy()
+
+
+def save_bookings(data):
+    try:
+        with open(BOOKINGS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+
+bookings = load_bookings()
+next_booking_id = max((b.get('id', 0) for b in bookings), default=0) + 1
 
 
 def get_room_status(room_id):
@@ -90,6 +114,8 @@ def book_room(room_id):
             "end_time": end_time
         }
         bookings.append(new_booking)
+        # บันทึกการจองลงไฟล์ประวัติ
+        save_bookings(bookings)
         next_booking_id += 1
         flash(f'✅ จองห้อง {room_name} สำเร็จ! วันที่ {date} เวลา {start_time} - {end_time}', 'success')
     else:
@@ -108,11 +134,33 @@ def cancel_booking(booking_id):
     if booking_to_cancel:
         room_name = next((r['name'] for r in rooms if r['id'] == booking_to_cancel['room_id']), "ห้อง")
         bookings = [b for b in bookings if b['id'] != booking_id]
+        # บันทึกการเปลี่ยนแปลงลงไฟล์
+        save_bookings(bookings)
         flash(f'✅ ยกเลิกการจองห้อง {room_name} สำเร็จ!', 'success')
     else:
         flash('❌ ไม่พบการจองที่ต้องการยกเลิก', 'danger')
     
     return redirect(url_for('booking'))
+
+
+
+@app.route('/history')
+def history():
+    # แสดงประวัติการจองทั้งหมด
+    bookings_with_room = []
+    for b in bookings:
+        room_name = next((r['name'] for r in rooms if r['id'] == b['room_id']), 'ไม่ทราบชื่อห้อง')
+        entry = b.copy()
+        entry['room_name'] = room_name
+        bookings_with_room.append(entry)
+
+    # เรียงตามวันที่และเวลาเริ่ม
+    try:
+        bookings_with_room.sort(key=lambda x: (x['date'], x['start_time']))
+    except Exception:
+        pass
+
+    return render_template('history.html', bookings=bookings_with_room)
 
 
 
