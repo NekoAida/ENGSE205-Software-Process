@@ -23,6 +23,7 @@ def init_database():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             room_id INTEGER NOT NULL,
             booker_name TEXT NOT NULL,
+            booker_email TEXT,
             date TEXT NOT NULL,
             start_time TEXT NOT NULL,
             end_time TEXT NOT NULL,
@@ -37,6 +38,7 @@ def init_database():
             booking_id INTEGER,
             room_id INTEGER NOT NULL,
             booker_name TEXT NOT NULL,
+            booker_email TEXT,
             date TEXT NOT NULL,
             start_time TEXT NOT NULL,
             end_time TEXT NOT NULL,
@@ -47,6 +49,23 @@ def init_database():
     ''')
     
     conn.commit()
+    # ให้แน่ใจว่าคอลัมน์อีเมลมีอยู่ (รองรับการอัปเดต schema สำหรับฐานข้อมูลเดิม)
+    try:
+        def add_column_if_not_exists(connection, table, column_def):
+            cur = connection.cursor()
+            # ตรวจสอบคอลัมน์ที่มีอยู่
+            cols = [r['name'] for r in connection.execute(f"PRAGMA table_info({table})").fetchall()]
+            col_name = column_def.split()[0]
+            if col_name not in cols:
+                cur.execute(f"ALTER TABLE {table} ADD COLUMN {column_def}")
+                connection.commit()
+
+        add_column_if_not_exists(conn, 'bookings', 'booker_email TEXT')
+        add_column_if_not_exists(conn, 'booking_history', 'booker_email TEXT')
+    except Exception:
+        # ถ้าเกิดปัญหาในการ ALTER TABLE ปล่อยผ่าน (ไม่ทำให้แอพล่ม)
+        pass
+
     conn.close()
 
 
@@ -77,24 +96,24 @@ def get_bookings_by_room(room_id):
     return [dict(booking) for booking in bookings]
 
 
-def create_booking(room_id, booker_name, date, start_time, end_time):
+def create_booking(room_id, booker_name, date, start_time, end_time, booker_email=None):
     """สร้างการจองใหม่"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
     # เพิ่มการจองใหม่
     cursor.execute('''
-        INSERT INTO bookings (room_id, booker_name, date, start_time, end_time)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (room_id, booker_name, date, start_time, end_time))
+        INSERT INTO bookings (room_id, booker_name, booker_email, date, start_time, end_time)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (room_id, booker_name, booker_email, date, start_time, end_time))
     
     booking_id = cursor.lastrowid
     
     # บันทึกประวัติ
     cursor.execute('''
-        INSERT INTO booking_history (booking_id, room_id, booker_name, date, start_time, end_time, action, notes)
-        VALUES (?, ?, ?, ?, ?, ?, 'created', 'การจองถูกสร้างขึ้น')
-    ''', (booking_id, room_id, booker_name, date, start_time, end_time))
+        INSERT INTO booking_history (booking_id, room_id, booker_name, booker_email, date, start_time, end_time, action, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'created', 'การจองถูกสร้างขึ้น')
+    ''', (booking_id, room_id, booker_name, booker_email, date, start_time, end_time))
     
     conn.commit()
     conn.close()
@@ -113,9 +132,9 @@ def cancel_booking(booking_id):
     if booking:
         # บันทึกประวัติการยกเลิก
         cursor.execute('''
-            INSERT INTO booking_history (booking_id, room_id, booker_name, date, start_time, end_time, action, notes)
-            VALUES (?, ?, ?, ?, ?, ?, 'cancelled', 'การจองถูกยกเลิก')
-        ''', (booking_id, booking['room_id'], booking['booker_name'], booking['date'], 
+            INSERT INTO booking_history (booking_id, room_id, booker_name, booker_email, date, start_time, end_time, action, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'cancelled', 'การจองถูกยกเลิก')
+        ''', (booking_id, booking['room_id'], booking['booker_name'], booking['booker_email'], booking['date'], 
               booking['start_time'], booking['end_time']))
         
         # ลบการจอง

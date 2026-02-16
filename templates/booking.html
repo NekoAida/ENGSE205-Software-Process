@@ -147,6 +147,14 @@
                                 </div>
 
                                 <div class="mb-3">
+                                    <label for="bookerEmail{{ room.id }}" class="form-label">
+                                        <strong>📧 อีเมลผู้จอง</strong>
+                                    </label>
+                                    <input type="email" class="form-control" id="bookerEmail{{ room.id }}"
+                                        name="booker_email" placeholder="you@example.com" required autocomplete="email">
+                                </div>
+
+                                <div class="mb-3">
                                     <label for="bookingDate{{ room.id }}" class="form-label">
                                         <strong>📅 วันที่จอง</strong>
                                     </label>

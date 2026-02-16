@@ -1,9 +1,25 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
+import os
+from flask_mail import Mail, Message
+from dotenv import load_dotenv
 from database import database as db
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here-change-in-production'  # จำเป็นสำหรับ flash messages
+
+# --- Mail configuration (ใช้ environment variables) ---
+app.config.update(
+    MAIL_SERVER=os.environ.get('MAIL_SERVER', 'smtp.gmail.com'),
+    MAIL_PORT=int(os.environ.get('MAIL_PORT', 587)),
+    MAIL_USE_TLS=os.environ.get('MAIL_USE_TLS', 'true').lower() in ('true', '1', 'yes'),
+    MAIL_USERNAME=os.environ.get('MAIL_USERNAME'),
+    MAIL_PASSWORD=os.environ.get('MAIL_PASSWORD'),
+    MAIL_DEFAULT_SENDER=os.environ.get('MAIL_DEFAULT_SENDER')
+)
+mail = Mail(app)
 
 # เริ่มต้นฐานข้อมูล
 db.init_database()
@@ -20,6 +36,16 @@ rooms = [
 def get_room_status(room_id):
     """ตรวจสอบสถานะห้องและรายการจองทั้งหมด"""
     return db.get_bookings_by_room(room_id)
+
+
+def send_email(subject, recipients, template, **context):
+    """Helper ส่งอีเมลโดยใช้ Flask-Mail และเทมเพลต Jinja2"""
+    try:
+        msg = Message(subject=subject, recipients=recipients)
+        msg.html = render_template(template, **context)
+        mail.send(msg)
+    except Exception as e:
+        app.logger.error(f"Failed to send email: {e}")
 
 
 def is_time_slot_available(room_id, date, start_time, end_time):
@@ -90,6 +116,7 @@ def booking():
 @app.route('/book/<int:room_id>', methods=['POST'])
 def book_room(room_id):
     booker_name = request.form.get('booker_name')
+    booker_email = request.form.get('booker_email')
     date = request.form.get('date')
     start_time = request.form.get('start_time')
     end_time = request.form.get('end_time')
@@ -98,7 +125,7 @@ def book_room(room_id):
     room_name = next((r['name'] for r in rooms if r['id'] == room_id), "ห้องที่เลือก")
     
     # ตรวจสอบข้อมูลที่จำเป็น
-    if not all([booker_name, date, start_time, end_time]):
+    if not all([booker_name, booker_email, date, start_time, end_time]):
         flash(f'❌ กรุณากรอกข้อมูลให้ครบถ้วน!', 'danger')
         return redirect(url_for('booking'))
     
@@ -110,8 +137,21 @@ def book_room(room_id):
     # ตรวจสอบว่าช่วงเวลาว่างหรือไม่
     if is_time_slot_available(room_id, date, start_time, end_time):
         # สร้างการจองในฐานข้อมูล (จะบันทึกประวัติอัตโนมัติ)
-        booking_id = db.create_booking(room_id, booker_name, date, start_time, end_time)
+        booking_id = db.create_booking(room_id, booker_name, date, start_time, end_time, booker_email)
         flash(f'✅ จองห้อง {room_name} สำเร็จ! วันที่ {date} เวลา {start_time} - {end_time}', 'success')
+        # พยายามส่งอีเมลยืนยัน (ไม่ทำให้การจองล้มเหลวถ้าเมลส่งไม่สำเร็จ)
+        try:
+            booking = db.get_booking_by_id(booking_id)
+            if booking and booking.get('booker_email'):
+                send_email(
+                    subject='Booking confirmed',
+                    recipients=[booking['booker_email']],
+                    template='email/booking_confirmation.html',
+                    booking=booking,
+                    room_name=room_name
+                )
+        except Exception as e:
+            app.logger.error(f"Error sending confirmation email: {e}")
     else:
         flash(f'❌ ไม่สามารถจองได้! ห้อง {room_name} มีการจองในช่วงเวลาที่ทับซ้อนกัน (วันที่ {date} เวลา {start_time} - {end_time})', 'danger')
     
