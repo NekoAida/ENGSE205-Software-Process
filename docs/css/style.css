@@ -1,0 +1,259 @@
+/* ===== Google Font ===== */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background: #f4f6fb;
+  min-height: 100vh;
+}
+
+/* ===== Navigation ===== */
+.navbar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.3);
+  padding: 0.75rem 1.5rem;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.3px;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.9) !important;
+  transition: all 0.25s ease;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff !important;
+  transform: translateY(-2px);
+}
+
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #fff !important;
+}
+
+/* ===== Content Area ===== */
+.content-area {
+  margin-top: 2.5rem;
+  margin-bottom: 3rem;
+}
+
+h1 {
+  font-weight: 700;
+  color: #1a1d2e;
+  letter-spacing: -0.5px;
+}
+
+/* ===== Room Status ===== */
+.status-available {
+  color: #1a9e5c;
+  font-weight: 700;
+}
+
+.status-busy {
+  color: #e53e3e;
+  font-weight: 700;
+}
+
+/* ===== Cards ===== */
+.card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 28px rgba(102, 126, 234, 0.18);
+}
+
+.card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  padding: 1rem 1.25rem;
+  border-radius: 0 !important;
+  border-bottom: none !important;
+}
+
+.card-header h5 {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+/* ===== Booking List ===== */
+.booking-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.booking-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: #f8f9fa;
+  border-left: 4px solid #667eea;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.booking-item:hover {
+  background: #e9eeff;
+}
+
+.booking-details {
+  flex-grow: 1;
+}
+
+/* ===== Booking Summary (index) ===== */
+.booking-summary {
+  font-size: 0.88rem;
+}
+.booking-summary .mb-1 {
+  padding: 0.2rem 0;
+  border-bottom: 1px solid #eee;
+}
+.booking-summary .mb-1:last-child {
+  border-bottom: none;
+}
+
+/* ===== Modal ===== */
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 0;
+}
+
+.modal-content {
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+}
+.modal-body {
+  padding: 1.75rem;
+}
+
+.booking-info {
+  background: #f4f6fb;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.2rem;
+}
+
+.booking-info h6 {
+  color: #888;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.booking-info p {
+  font-weight: 600;
+  color: #1a1d2e;
+  margin: 0;
+}
+
+/* ===== Tables ===== */
+.table-hover tbody tr {
+  transition: background 0.2s ease;
+}
+.table-hover tbody tr:hover {
+  background: rgba(102, 126, 234, 0.06);
+}
+.table thead th {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ===== Alerts (Flash) ===== */
+.alert {
+  animation: slideDown 0.45s ease-out;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  border: none;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Buttons ===== */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  font-weight: 600;
+  border-radius: 8px;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* ===== Badge ===== */
+.badge {
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.35em 0.65em;
+}
+
+/* ===== Toast Notification ===== */
+.toast-container {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast-msg {
+  padding: 0.9rem 1.3rem;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.4s ease;
+  min-width: 260px;
+}
+
+.toast-success {
+  background: linear-gradient(135deg, #43a87a, #2e7d5d);
+}
+.toast-danger {
+  background: linear-gradient(135deg, #e55353, #c0392b);
+}
