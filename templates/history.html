@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประวัติการจอง - ระบบจองห้องประชุม</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navigation Menu -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                🏢 ระบบจองห้องประชุม
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">🏠 หน้าแรก</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/booking">📅 การจอง</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/history">📜 ประวัติการจอง</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container content-area mt-4">
+        <h1 class="mb-4">📜 ประวัติการจองและยกเลิก</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% if history %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>เวลาทำรายการ</th>
+                        <th>การดำเนินการ</th>
+                        <th>ห้อง</th>
+                        <th>ผู้จอง</th>
+                        <th>วันที่</th>
+                        <th>เวลา</th>
+                        <th>หมายเหตุ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in history %}
+                    <tr>
+                        <td>
+                            <small>{{ record.action_time[:19] }}</small>
+                        </td>
+                        <td>
+                            {% if record.action == 'created' %}
+                            <span class="badge bg-success">✓ จองสำเร็จ</span>
+                            {% elif record.action == 'cancelled' %}
+                            <span class="badge bg-danger">✗ ยกเลิก</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ record.action }}</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ record.room_name }}</strong></td>
+                        <td>{{ record.booker_name }}</td>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.start_time }} - {{ record.end_time }}</td>
+                        <td><small class="text-muted">{{ record.notes or '-' }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <p class="mb-0">ยังไม่มีประวัติการจองในระบบ</p>
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="/booking" class="btn btn-primary">📅 ไปหน้าการจอง</a>
+            <a href="/" class="btn btn-secondary">🏠 กลับหน้าแรก</a>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
